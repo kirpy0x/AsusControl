@@ -20,13 +20,10 @@ PluginComponent {
 
   Process {
     id: procPowerGet
-    command: ["asusctl", "profile", "-p"]
+    command: ["sh", "-c", "asusctl profile get | awk 'NR == 1 {print $3}'"]
     stdout: SplitParser {
       onRead: line => {
-        var match = line.trim().match(/(\w+)$/)
-        if (match && ["Quiet", "Balanced", "Performance"].includes(match[1])) {
-          root.activeProfile = match[1]
-        }
+        root.activeProfile = line.trim()
       }
     }
   }
@@ -56,7 +53,7 @@ PluginComponent {
 
   Process {
     id: procPowerSet
-    command: ["asusctl", "profile", "-P", "Balanced"] 
+    command: ["asusctl", "profile", "set", "Balanced"] 
     stderr: SplitParser { onRead: line => ToastService.showError("ASUS Error", line) }
     onExited: code => { 
       if(code === 0) { 
@@ -134,7 +131,7 @@ PluginComponent {
   }
 
   function setPowerProfile(name) {
-    procPowerSet.command = ["asusctl", "profile", "-P", name]
+    procPowerSet.command = ["asusctl", "profile", "set", name]
     procPowerSet.running = true
     root.activeProfile = name
   }
@@ -172,7 +169,7 @@ PluginComponent {
   }
 
   popoutWidth: 400
-  popoutHeight: Math.max(200, contentWrapper.implicitHeight + 60)
+  popoutHeight: 500
 
   popoutContent: Component {
     PopoutComponent {
